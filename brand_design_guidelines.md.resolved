@@ -1,0 +1,212 @@
+# Brand Design Colour Palette Guidelines
+## Feisal Ahmed — Agent Engineer Portfolio
+
+> Extracted from moodboard reference: `folly.png`
+
+---
+
+## 🎨 Colour Palette
+
+The palette is a **6-swatch gradient system** moving from light neutrals to deep navy blues, evoking a **professional, architectural, alpine** aesthetic.
+
+| Swatch | Hex Code    | RGB               | HSL                    | Role               |
+|--------|-------------|-------------------|------------------------|---------------------|
+| 1      | `#F0F0EE`   | `rgb(240,240,238)` | `hsl(60, 5%, 94%)`    | **Lightest / Background** |
+| 2      | `#DBDBDB`   | `rgb(219,219,219)` | `hsl(0, 0%, 86%)`     | **Light Neutral / Borders** |
+| 3      | `#4A5262`   | `rgb(74, 82, 98)`  | `hsl(220, 14%, 34%)`  | **Mid-tone / Subtext** |
+| 4      | `#7A899B`   | `rgb(122,137,155)` | `hsl(213, 14%, 54%)`  | **Accent / Secondary** |
+| 5      | `#506383`   | `rgb(80, 99, 131)` | `hsl(218, 24%, 41%)`  | **Primary Blue / Interactive** |
+| 6      | `#2E4160`   | `rgb(46, 65, 96)`  | `hsl(217, 35%, 28%)`  | **Deepest / Headings & CTA** |
+
+---
+
+## 🔤 Typography
+
+### Font Families
+
+| Role            | Font Stack                              |
+|-----------------|-----------------------------------------|
+| **Display**     | `'Space Grotesk', 'Inter', sans-serif`  |
+| **Body**        | `'Inter', sans-serif`                   |
+
+### Weights
+
+| Weight          | Value  | Usage                          |
+|-----------------|--------|--------------------------------|
+| **Light**       | 300    | Body text, captions            |
+| **Regular**     | 400    | General body, links            |
+| **Medium**      | 500    | Subheadings, emphasis          |
+| **Semi-Bold**   | 600    | Section headings               |
+| **Bold**        | 700    | Hero display, CTAs, headings   |
+
+### Type Usage Rules
+
+| Element             | Font           | Weight    | Colour     | Notes                              |
+|---------------------|----------------|-----------|------------|-------------------------------------|
+| Hero / Display      | Space Grotesk  | Bold 700  | `#F0F0EE`  | White-on-dark, overlaid on imagery  |
+| Section Headings    | Space Grotesk  | SemiBold 600 | `#2E4160` | Deep navy, commanding presence      |
+| Subheadings         | Space Grotesk  | Medium 500 | `#4A5262` | Mid-tone slate for hierarchy        |
+| Body Text           | Inter          | Regular 400 | `#4A5262` | Comfortable reading on light bg     |
+| Captions / Meta     | Inter          | Light 300 | `#7A899B`  | Subdued secondary information       |
+| Links / Interactive | Inter          | Regular 400 | `#506383` | Primary blue, underline on hover    |
+
+---
+
+## 🎯 Colour Roles & Semantic Usage
+
+### Backgrounds
+| Context              | Colour     | Notes                         |
+|----------------------|------------|-------------------------------|
+| Page Background      | `#F0F0EE`  | Warm off-white, not pure `#FFF` |
+| Card / Surface       | `#FFFFFF`  | Pure white for elevated cards  |
+| Muted Section        | `#DBDBDB`  | Light grey for alternating sections |
+| Dark Section / Hero  | `#2E4160`  | Deep navy for contrast blocks  |
+| Frame / Accent Block | `#333333`  | Near-black (from "Frame" element) |
+
+### Foreground / Text
+| Context              | Colour     |
+|----------------------|------------|
+| Primary Text         | `#4A5262`  |
+| Secondary Text       | `#7A899B`  |
+| Headings             | `#2E4160`  |
+| Inverted Text (dark bg) | `#F0F0EE` |
+
+### Interactive Elements
+| State                | Colour     |
+|----------------------|------------|
+| Default              | `#506383`  |
+| Hover                | `#2E4160`  |
+| Active / Pressed     | `#4A5262`  |
+| Disabled             | `#DBDBDB`  |
+
+### Borders & Dividers
+| Context              | Colour     |
+|----------------------|------------|
+| Subtle Divider       | `#DBDBDB`  |
+| Active Border        | `#7A899B`  |
+| Focus Ring           | `#506383`  |
+
+---
+
+## 🌗 Contrast Ratios (WCAG 2.1)
+
+| Pair                                  | Ratio   | AA (Normal) | AA (Large) |
+|---------------------------------------|---------|-------------|------------|
+| `#2E4160` on `#F0F0EE`               | ~8.5:1  | ✅ Pass     | ✅ Pass    |
+| `#4A5262` on `#F0F0EE`               | ~5.8:1  | ✅ Pass     | ✅ Pass    |
+| `#506383` on `#F0F0EE`               | ~4.5:1  | ✅ Pass     | ✅ Pass    |
+| `#7A899B` on `#F0F0EE`               | ~3.0:1  | ❌ Fail     | ✅ Pass    |
+| `#F0F0EE` on `#2E4160`               | ~8.5:1  | ✅ Pass     | ✅ Pass    |
+
+> [!WARNING]
+> `#7A899B` on `#F0F0EE` fails AA for normal text. Use only for large text (18px+), captions, or decorative elements.
+
+---
+
+## 🖼️ Visual Motifs & Imagery
+
+Extracted from the moodboard:
+
+| Motif               | Description                                                |
+|---------------------|------------------------------------------------------------|
+| **Architecture**    | Urban skyscrapers, glass/steel, shot from low angles, warm amber tones |
+| **Alpine / Nature** | Mountain peaks with clouds, cool blue/grey tones, atmospheric depth |
+| **Colour Treatment**| Desaturated, muted — imagery should feel editorial and refined, never saturated or cartoonish |
+| **Overlay Style**   | Bold white typography overlaid directly on photography with slight transparency or shadow for legibility |
+
+---
+
+## 📐 CSS Custom Properties
+
+```css
+:root {
+  /* === BRAND COLOURS === */
+  --color-bg-light:       #F0F0EE;
+  --color-neutral-border: #DBDBDB;
+  --color-text-primary:   #4A5262;
+  --color-accent-muted:   #7A899B;
+  --color-primary:        #506383;
+  --color-primary-dark:   #2E4160;
+  --color-surface:        #FFFFFF;
+  --color-frame-dark:     #333333;
+
+  /* === TYPOGRAPHY === */
+  --font-display:        'Space Grotesk', 'Inter', sans-serif;
+  --font-body:           'Inter', sans-serif;
+  --font-weight-light:   300;
+  --font-weight-regular: 400;
+  --font-weight-medium:  500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:    700;
+
+  /* === SEMANTIC TOKENS === */
+  --color-heading:       var(--color-primary-dark);
+  --color-body:          var(--color-text-primary);
+  --color-caption:       var(--color-accent-muted);
+  --color-link:          var(--color-primary);
+  --color-link-hover:    var(--color-primary-dark);
+  --color-bg-page:       var(--color-bg-light);
+  --color-bg-card:       var(--color-surface);
+  --color-bg-hero:       var(--color-primary-dark);
+  --color-divider:       var(--color-neutral-border);
+}
+```
+
+---
+
+## 🤖 LLM-Ready Prompt Block
+
+Copy the block below directly into any LLM prompt to enforce brand consistency:
+
+```
+BRAND DESIGN SYSTEM — FEISAL AHMED WEB PORTFOLIO
+
+COLOUR PALETTE (ordered light → dark):
+1. #F0F0EE — Background / Lightest (warm off-white)
+2. #DBDBDB — Borders / Light Neutral
+3. #7A899B — Captions / Secondary Accent (use 18px+ only on light bg)
+4. #4A5262 — Body Text / Mid-tone Slate
+5. #506383 — Primary Blue / Interactive Elements
+6. #2E4160 — Headings / CTA / Deep Navy
+
+TYPOGRAPHY:
+- Display Font: Space Grotesk (Google Fonts) — headings, hero text, CTAs
+- Body Font: Inter (Google Fonts) — body text, captions, links
+- Display stack: 'Space Grotesk', 'Inter', sans-serif
+- Body stack: 'Inter', sans-serif
+- Weights: Light (300), Regular (400), Medium (500), SemiBold (600), Bold (700)
+- Hero overlay: Space Grotesk Bold 700 in #F0F0EE on dark imagery
+- Section headings: Space Grotesk SemiBold 600 in #2E4160
+- Subheadings: Space Grotesk Medium 500 in #4A5262
+- Body: Inter Regular 400 in #4A5262
+- Captions: Inter Light 300 in #7A899B
+
+DESIGN RULES:
+- Never use pure white (#FFFFFF) as page background; use #F0F0EE
+- Imagery should be desaturated / editorial — urban architecture or alpine nature
+- Typography on images: bold white with subtle text-shadow for legibility
+- Interactive elements default to #506383, darken to #2E4160 on hover
+- Maintain minimum 4.5:1 contrast ratio for body text (WCAG AA)
+- Use #333333 for accent dark blocks / frames
+- Palette is cool-toned; avoid warm accent colours (no oranges, reds, yellows)
+```
+
+---
+
+## 📊 Palette Gradient Visualisation
+
+```
+Light ←————————————————————————————————————→ Dark
+
+#F0F0EE  ░░░░░░░  Warm Off-White
+#DBDBDB  ▒▒▒▒▒▒▒  Light Grey
+#7A899B  ▓▓▓▓▓▓▓  Steel Blue
+#4A5262  ███████  Slate
+#506383  ███████  Denim Blue
+#2E4160  ███████  Deep Navy
+```
+
+---
+
+> [!TIP]
+> When feeding this to an LLM for code generation, use the **LLM-Ready Prompt Block** section above as a system-level instruction or prepend it to your design prompts. This ensures the model respects exact hex values, font weights, and contrast constraints.

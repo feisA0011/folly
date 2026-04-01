@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="F.M.A — Agent Engineer & Vibe Coder. Building intelligent AI agents, automating workflows, and crafting premium digital experiences.">
+  <title>F.M.A | Agent Engineer & Vibe Coder</title>
+
+  <!-- Preconnects -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://prod.spline.design" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+
+  <!-- Prefetch Spline scene -->
+  <link rel="prefetch" href="https://prod.spline.design/pn8OKuZsuUSi5MTmRRpgxZSY/scene.splinecode" as="fetch" crossorigin>
+  <link rel="modulepreload" href="https://unpkg.com/@splinetool/viewer@1.9.56/build/spline-viewer.js">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Spline 3D Viewer -->
+  <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.56/build/spline-viewer.js"></script>
+
+  <!-- GSAP + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+
+  <!-- Lenis Smooth Scroll -->
+  <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js" defer></script>
+</head>
+<body>
+
+  <!-- ========== PRELOADER ========== -->
+  <div class="preloader" id="preloader">
+    <div class="preloader-inner">
+      <div class="preloader-logo">
+        <span class="preloader-star">★</span>
+        <span class="preloader-name">F.M.A</span>
+      </div>
+      <div class="preloader-bar">
+        <div class="preloader-bar-fill" id="preloader-fill"></div>
+      </div>
+      <span class="preloader-label">LOADING EXPERIENCE</span>
+    </div>
+  </div>
+
+  <!-- ========== GRAIN OVERLAY ========== -->
+  <div class="grain-overlay" aria-hidden="true"></div>
+
+  <!-- ========== CUSTOM CURSOR ========== -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-dot" id="cursor-dot"></div>
+
+  <!-- ========== NAVIGATION ========== -->
+  <nav class="navbar" id="navbar">
+    <a href="#hero" class="nav-logo">
+      <span class="nav-logo-star">★</span> F.M.A
+    </a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#work" data-magnetic>WORK</a></li>
+      <li><a href="#about" data-magnetic>ABOUT</a></li>
+      <li><a href="#services" data-magnetic>SERVICES</a></li>
+      <li><a href="#contact" data-magnetic>CONTACT</a></li>
+    </ul>
+    <a href="#contact" class="nav-cta" data-magnetic>
+      <span>LET'S TALK</span>
+      <span class="nav-cta-icon">↗</span>
+    </a>
+    <button class="nav-mobile-toggle" id="nav-mobile-toggle" aria-label="Toggle navigation">
+      <span></span>
+      <span></span>
+    </button>
+  </nav>
+
+  <!-- ========== HERO SECTION ========== -->
+  <section class="hero" id="hero">
+    <div class="hero-text-row hero-text-top">
+      <h1 class="hero-heading" id="hero-heading-1">
+        <span class="hero-word" data-animate="word">AGENT</span>
+      </h1>
+    </div>
+
+    <div class="hero-center">
+      <div class="hero-bio" id="hero-bio">
+        <p>// I'M <strong>FEISAL</strong> — AN AGENT ENGINEER &amp; VIBE CODER BUILDING INTELLIGENT AI AGENTS, AUTOMATING WORKFLOWS, AND SHIPPING PREMIUM DIGITAL PRODUCTS.</p>
+      </div>
+
+      <div class="hero-3d-container" id="spline-container">
+        <spline-viewer
+          url="https://prod.spline.design/pn8OKuZsuUSi5MTmRRpgxZSY/scene.splinecode"
+          events-target="global"
+          loading-anim-type="spinner-big-dark"
+        ></spline-viewer>
+        <div class="hero-3d-fallback" id="hero-3d-fallback">
+          <div class="placeholder-glow"></div>
+          <div class="placeholder-ring"></div>
+          <div class="placeholder-ring placeholder-ring--2"></div>
+          <div class="placeholder-text">3D</div>
+        </div>
+      </div>
+
+      <div class="hero-tagline" id="hero-tagline">
+        <p>// CODE THAT<br>THINKS FOR YOU</p>
+      </div>
+    </div>
+
+    <div class="hero-text-row hero-text-bottom">
+      <h1 class="hero-heading" id="hero-heading-2">
+        <span class="hero-word" data-animate="word">ENGINEER</span>
+      </h1>
+    </div>
+
+    <div class="hero-scroll-indicator" id="scroll-indicator">
+      <div class="scroll-line"></div>
+      <span>SCROLL</span>
+    </div>
+
+    <!-- Hero bottom info bar -->
+    <div class="hero-info-bar">
+      <div class="hero-info-item">
+        <span class="hero-info-label">BASED IN</span>
+        <span class="hero-info-value">LONDON, UK</span>
+      </div>
+      <div class="hero-info-item">
+        <span class="hero-info-label">AVAILABLE FOR</span>
+        <span class="hero-info-value">FREELANCE & CONTRACT</span>
+      </div>
+      <div class="hero-info-item">
+        <span class="hero-info-label">SPECIALITY</span>
+        <span class="hero-info-value">AI AGENTS & AUTOMATION</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== MARQUEE ========== -->
+  <section class="marquee-section">
+    <div class="marquee-track">
+      <div class="marquee-content">
+        <span>AGENT ENGINEER</span>
+        <span class="marquee-dot">◆</span>
+        <span>VIBE CODER</span>
+        <span class="marquee-dot">◆</span>
+        <span>AI ARCHITECT</span>
+        <span class="marquee-dot">◆</span>
+        <span>WORKFLOW AUTOMATION</span>
+        <span class="marquee-dot">◆</span>
+        <span>FULL-STACK DEV</span>
+        <span class="marquee-dot">◆</span>
+        <span>DIGITAL PRODUCTS</span>
+        <span class="marquee-dot">◆</span>
+        <span>AGENT ENGINEER</span>
+        <span class="marquee-dot">◆</span>
+        <span>VIBE CODER</span>
+        <span class="marquee-dot">◆</span>
+        <span>AI ARCHITECT</span>
+        <span class="marquee-dot">◆</span>
+        <span>WORKFLOW AUTOMATION</span>
+        <span class="marquee-dot">◆</span>
+        <span>FULL-STACK DEV</span>
+        <span class="marquee-dot">◆</span>
+        <span>DIGITAL PRODUCTS</span>
+        <span class="marquee-dot">◆</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SELECTED WORK ========== -->
+  <section class="section work-section" id="work">
+    <div class="section-header">
+      <div class="section-label" data-reveal>
+        <span class="section-number">01</span>
+        <span class="section-dash">—</span>
+        <span>SELECTED WORK</span>
+      </div>
+      <h2 class="section-title" data-reveal>
+        <span class="line">PROJECTS THAT</span>
+        <span class="line">PUSH BOUNDARIES</span>
+      </h2>
+    </div>
+
+    <div class="projects-grid">
+      <!-- Project 1 — Large -->
+      <article class="project-card project-card--large" data-reveal>
+        <a href="#" class="project-card-inner">
+          <div class="project-card-image">
+            <div class="project-visual project-visual--1">
+              <div class="project-visual-shape"></div>
+              <div class="project-visual-shape"></div>
+              <div class="project-visual-shape"></div>
+              <span class="project-visual-label">NEX</span>
+            </div>
+          </div>
+          <div class="project-card-info">
+            <span class="project-number">01</span>
+            <h3 class="project-title">NEXBOT AI</h3>
+            <p class="project-desc">Autonomous AI agent platform with natural language interfaces. Custom orchestration layers processing complex multi-step tasks.</p>
+            <div class="project-tags">
+              <span>AI AGENTS</span>
+              <span>LLM</span>
+              <span>LANGCHAIN</span>
+            </div>
+          </div>
+          <div class="project-card-arrow">
+            <span>VIEW PROJECT</span>
+            <span class="arrow">↗</span>
+          </div>
+        </a>
+      </article>
+
+      <!-- Project 2 — Small -->
+      <article class="project-card project-card--small" data-reveal>
+        <a href="#" class="project-card-inner">
+          <div class="project-card-image">
+            <div class="project-visual project-visual--2">
+              <div class="project-visual-shape"></div>
+              <div class="project-visual-shape"></div>
+              <span class="project-visual-label">FLOW</span>
+            </div>
+          </div>
+          <div class="project-card-info">
+            <span class="project-number">02</span>
+            <h3 class="project-title">FLOWFORGE</h3>
+            <p class="project-desc">End-to-end workflow automation engine processing 2M+ events daily with intelligent routing.</p>
+            <div class="project-tags">
+              <span>AUTOMATION</span>
+              <span>API</span>
+              <span>REAL-TIME</span>
+            </div>
+          </div>
+          <div class="project-card-arrow">
+            <span>VIEW PROJECT</span>
+            <span class="arrow">↗</span>
+          </div>
+        </a>
+      </article>
+
+      <!-- Project 3 — Small -->
+      <article class="project-card project-card--small" data-reveal>
+        <a href="#" class="project-card-inner">
+          <div class="project-card-image">
+            <div class="project-visual project-visual--3">
+              <div class="project-visual-shape"></div>
+              <div class="project-visual-shape"></div>
+              <span class="project-visual-label">DATA</span>
+            </div>
+          </div>
+          <div class="project-card-info">
+            <span class="project-number">03</span>
+            <h3 class="project-title">DATAPULSE</h3>
+            <p class="project-desc">Interactive analytics dashboard with AI-powered insights. Complex data through clean interfaces.</p>
+            <div class="project-tags">
+              <span>DATA VIZ</span>
+              <span>AI</span>
+              <span>DASHBOARD</span>
+            </div>
+          </div>
+          <div class="project-card-arrow">
+            <span>VIEW PROJECT</span>
+            <span class="arrow">↗</span>
+          </div>
+        </a>
+      </article>
+
+      <!-- Project 4 — Large -->
+      <article class="project-card project-card--large" data-reveal>
+        <a href="#" class="project-card-inner">
+          <div class="project-card-image">
+            <div class="project-visual project-visual--4">
+              <div class="project-visual-shape"></div>
+              <div class="project-visual-shape"></div>
+              <div class="project-visual-shape"></div>
+              <span class="project-visual-label">MIND</span>
+            </div>
+          </div>
+          <div class="project-card-info">
+            <span class="project-number">04</span>
+            <h3 class="project-title">MINDSTACK</h3>
+            <p class="project-desc">B2B enrichment API with intelligent lead scoring. Real-time data pipelines powering sales intelligence at scale.</p>
+            <div class="project-tags">
+              <span>B2B</span>
+              <span>API</span>
+              <span>ENRICHMENT</span>
+            </div>
+          </div>
+          <div class="project-card-arrow">
+            <span>VIEW PROJECT</span>
+            <span class="arrow">↗</span>
+          </div>
+        </a>
+      </article>
+    </div>
+
+    <div class="work-cta" data-reveal>
+      <a href="#" class="btn-outline" data-magnetic>
+        <span>VIEW ALL PROJECTS</span>
+        <span class="btn-arrow">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ========== ABOUT ========== -->
+  <section class="section about-section" id="about">
+    <div class="section-header">
+      <div class="section-label" data-reveal>
+        <span class="section-number">02</span>
+        <span class="section-dash">—</span>
+        <span>ABOUT</span>
+      </div>
+    </div>
+
+    <div class="about-layout">
+      <div class="about-text" data-reveal>
+        <h2 class="about-headline">
+          <span class="line">I BUILD THINGS THAT</span>
+          <span class="line"><em>THINK</em>, <em>DECIDE</em>,</span>
+          <span class="line">AND <em>EXECUTE</em>.</span>
+        </h2>
+        <div class="about-body">
+          <p>I'm Feisal — a London-based Agent Engineer who sits at the intersection of AI, automation, and clean engineering. I don't just write code; I architect intelligent systems that replace entire workflows.</p>
+          <p>My approach is simple: understand the problem deeply, engineer the simplest solution that works, then make it beautiful. Every project I touch ships with intention — no bloat, no complexity theatre.</p>
+          <p>When I'm not building AI agents, you'll find me exploring new frameworks, contributing to open-source, or pushing the boundaries of what's possible with autonomous systems.</p>
+        </div>
+      </div>
+
+      <div class="about-visual" data-reveal>
+        <div class="about-image-frame">
+          <div class="about-image-abstract">
+            <div class="about-abstract-circle"></div>
+            <div class="about-abstract-grid"></div>
+            <span class="about-abstract-text">FMA</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat" data-reveal>
+        <span class="stat-number" data-count="50">0</span>
+        <span class="stat-plus">+</span>
+        <span class="stat-label">PROJECTS<br>DELIVERED</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat" data-reveal>
+        <span class="stat-number" data-count="3">0</span>
+        <span class="stat-plus">+</span>
+        <span class="stat-label">YEARS<br>EXPERIENCE</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat" data-reveal>
+        <span class="stat-number" data-count="15">0</span>
+        <span class="stat-plus">+</span>
+        <span class="stat-label">AI AGENTS<br>BUILT</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat" data-reveal>
+        <span class="stat-number" data-count="99">0</span>
+        <span class="stat-plus">.9%</span>
+        <span class="stat-label">SYSTEM<br>UPTIME</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SERVICES ========== -->
+  <section class="section services-section" id="services">
+    <div class="section-header">
+      <div class="section-label" data-reveal>
+        <span class="section-number">03</span>
+        <span class="section-dash">—</span>
+        <span>SERVICES</span>
+      </div>
+      <h2 class="section-title" data-reveal>
+        <span class="line">WHAT I</span>
+        <span class="line">BRING TO THE TABLE</span>
+      </h2>
+    </div>
+
+    <div class="services-grid">
+      <div class="service-card" data-reveal>
+        <div class="service-icon">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="24" cy="16" r="8"/>
+            <path d="M8 42c0-8.837 7.163-16 16-16s16 7.163 16 16"/>
+            <circle cx="38" cy="10" r="4"/>
+            <path d="M38 14v4m0 0h4m-4 0h-4"/>
+          </svg>
+        </div>
+        <span class="service-number">01</span>
+        <h3 class="service-title">AI Agent Engineering</h3>
+        <p class="service-desc">Building autonomous agents that think, decide, and execute. From conversational AI to complex multi-step orchestration — I architect the brains behind intelligent systems.</p>
+        <div class="service-tools">
+          <span>LangChain</span>
+          <span>GPT-4</span>
+          <span>Claude</span>
+          <span>Custom LLM</span>
+        </div>
+      </div>
+
+      <div class="service-card" data-reveal>
+        <div class="service-icon">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M6 12h36M6 24h36M6 36h36"/>
+            <circle cx="16" cy="12" r="3" fill="currentColor"/>
+            <circle cx="32" cy="24" r="3" fill="currentColor"/>
+            <circle cx="24" cy="36" r="3" fill="currentColor"/>
+          </svg>
+        </div>
+        <span class="service-number">02</span>
+        <h3 class="service-title">Workflow Automation</h3>
+        <p class="service-desc">Streamlining operations with intelligent pipelines. I eliminate manual processes and build systems that scale — from data ingestion to decision-making workflows.</p>
+        <div class="service-tools">
+          <span>n8n</span>
+          <span>Zapier</span>
+          <span>Custom APIs</span>
+          <span>Webhooks</span>
+        </div>
+      </div>
+
+      <div class="service-card" data-reveal>
+        <div class="service-icon">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="4" y="8" width="40" height="28" rx="3"/>
+            <path d="M16 20l-4 4 4 4M32 20l4 4-4 4M26 18l-4 12"/>
+          </svg>
+        </div>
+        <span class="service-number">03</span>
+        <h3 class="service-title">Full-Stack Development</h3>
+        <p class="service-desc">End-to-end web applications built for scale. Modern frameworks, clean architecture, and performance-first engineering from database to deployment.</p>
+        <div class="service-tools">
+          <span>Next.js</span>
+          <span>React</span>
+          <span>Node.js</span>
+          <span>PostgreSQL</span>
+        </div>
+      </div>
+
+      <div class="service-card" data-reveal>
+        <div class="service-icon">
+          <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="6" y="6" width="36" height="36" rx="4"/>
+            <path d="M6 16h36"/>
+            <circle cx="12" cy="11" r="1.5" fill="currentColor"/>
+            <circle cx="18" cy="11" r="1.5" fill="currentColor"/>
+            <rect x="12" y="22" width="12" height="8" rx="1"/>
+            <path d="M12 36h24M12 32h16"/>
+          </svg>
+        </div>
+        <span class="service-number">04</span>
+        <h3 class="service-title">Digital Product Design</h3>
+        <p class="service-desc">Premium interfaces that convert and delight. I design with engineering precision — every pixel serves a purpose, every interaction feels intentional.</p>
+        <div class="service-tools">
+          <span>Figma</span>
+          <span>Framer</span>
+          <span>Spline 3D</span>
+          <span>Motion</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== TECH STACK MARQUEE ========== -->
+  <section class="stack-marquee">
+    <div class="stack-label">TECH STACK</div>
+    <div class="stack-track">
+      <div class="stack-content">
+        <span class="stack-item">PYTHON</span>
+        <span class="stack-item">TYPESCRIPT</span>
+        <span class="stack-item">NEXT.JS</span>
+        <span class="stack-item">REACT</span>
+        <span class="stack-item">NODE.JS</span>
+        <span class="stack-item">LANGCHAIN</span>
+        <span class="stack-item">OPENAI</span>
+        <span class="stack-item">CLAUDE</span>
+        <span class="stack-item">SUPABASE</span>
+        <span class="stack-item">POSTGRESQL</span>
+        <span class="stack-item">DOCKER</span>
+        <span class="stack-item">AWS</span>
+        <span class="stack-item">VERCEL</span>
+        <span class="stack-item">FIGMA</span>
+        <!-- Duplicate for seamless loop -->
+        <span class="stack-item">PYTHON</span>
+        <span class="stack-item">TYPESCRIPT</span>
+        <span class="stack-item">NEXT.JS</span>
+        <span class="stack-item">REACT</span>
+        <span class="stack-item">NODE.JS</span>
+        <span class="stack-item">LANGCHAIN</span>
+        <span class="stack-item">OPENAI</span>
+        <span class="stack-item">CLAUDE</span>
+        <span class="stack-item">SUPABASE</span>
+        <span class="stack-item">POSTGRESQL</span>
+        <span class="stack-item">DOCKER</span>
+        <span class="stack-item">AWS</span>
+        <span class="stack-item">VERCEL</span>
+        <span class="stack-item">FIGMA</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PROCESS ========== -->
+  <section class="section process-section">
+    <div class="section-header">
+      <div class="section-label" data-reveal>
+        <span class="section-number">04</span>
+        <span class="section-dash">—</span>
+        <span>PROCESS</span>
+      </div>
+      <h2 class="section-title" data-reveal>
+        <span class="line">HOW I WORK</span>
+      </h2>
+    </div>
+
+    <div class="process-grid">
+      <div class="process-step" data-reveal>
+        <span class="process-number">01</span>
+        <h3 class="process-title">DISCOVER</h3>
+        <p class="process-desc">Deep-dive into your problem space. I map requirements, identify constraints, and define what success looks like before writing a single line of code.</p>
+      </div>
+      <div class="process-step" data-reveal>
+        <span class="process-number">02</span>
+        <h3 class="process-title">ARCHITECT</h3>
+        <p class="process-desc">Design the system blueprint. Data flows, API contracts, infrastructure choices — all decided upfront so the build is surgical, not experimental.</p>
+      </div>
+      <div class="process-step" data-reveal>
+        <span class="process-number">03</span>
+        <h3 class="process-title">BUILD</h3>
+        <p class="process-desc">Rapid iteration with constant feedback. I ship working increments weekly, not quarterly. You see progress in real-time, not in slide decks.</p>
+      </div>
+      <div class="process-step" data-reveal>
+        <span class="process-number">04</span>
+        <h3 class="process-title">LAUNCH</h3>
+        <p class="process-desc">Deploy, monitor, optimize. I don't disappear after handoff — I ensure your system runs flawlessly and scales with your growth.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== CONTACT ========== -->
+  <section class="section contact-section" id="contact">
+    <div class="contact-content">
+      <div class="section-label" data-reveal>
+        <span class="section-number">05</span>
+        <span class="section-dash">—</span>
+        <span>CONTACT</span>
+      </div>
+
+      <h2 class="contact-headline" data-reveal>
+        <span class="line">LET'S BUILD</span>
+        <span class="line">SOMETHING</span>
+        <span class="line"><em>EXTRAORDINARY</em></span>
+      </h2>
+
+      <p class="contact-subtext" data-reveal>Have a project in mind? I'm currently available for freelance and contract work. Let's talk about how AI agents and smart automation can transform your business.</p>
+
+      <div class="contact-links" data-reveal>
+        <a href="mailto:hello@fma.dev" class="contact-big-link" data-magnetic>
+          <span class="contact-big-link-label">EMAIL</span>
+          <span class="contact-big-link-value">HELLO@FMA.DEV</span>
+          <span class="contact-big-link-arrow">↗</span>
+        </a>
+        <a href="https://github.com/fma" target="_blank" rel="noopener" class="contact-big-link" data-magnetic>
+          <span class="contact-big-link-label">GITHUB</span>
+          <span class="contact-big-link-value">@FMA</span>
+          <span class="contact-big-link-arrow">↗</span>
+        </a>
+        <a href="https://linkedin.com/in/fma" target="_blank" rel="noopener" class="contact-big-link" data-magnetic>
+          <span class="contact-big-link-label">LINKEDIN</span>
+          <span class="contact-big-link-value">FEISAL AHMED</span>
+          <span class="contact-big-link-arrow">↗</span>
+        </a>
+        <a href="https://twitter.com/fma" target="_blank" rel="noopener" class="contact-big-link" data-magnetic>
+          <span class="contact-big-link-label">TWITTER / X</span>
+          <span class="contact-big-link-value">@FMA</span>
+          <span class="contact-big-link-arrow">↗</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="contact-availability" data-reveal>
+      <span class="availability-dot"></span>
+      <span>AVAILABLE FOR NEW PROJECTS — Q2 2026</span>
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <span class="footer-logo-text">★ F.M.A</span>
+        <span class="footer-copyright">&copy; 2026 FEISAL AHMED. ALL RIGHTS RESERVED.</span>
+      </div>
+      <div class="footer-right">
+        <a href="#hero" class="footer-back-top" data-magnetic>
+          <span>BACK TO TOP</span>
+          <span class="footer-top-arrow">↑</span>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
