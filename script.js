@@ -530,41 +530,57 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('hero-canvas');
     if (!canvas) return;
 
+    // ── WebGL support check ──
+    try {
+      const test = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!test) return; // silently skip — glow still shows
+    } catch (e) { return; }
+
     const container = canvas.parentElement;
+    const isMobile  = window.innerWidth < 768 || navigator.maxTouchPoints > 0;
 
     // ── Renderer ──
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // On old iPhones cap pixel ratio at 1 to avoid GPU overload
+    const dpr = isMobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: !isMobile });
+    renderer.setPixelRatio(dpr);
 
     // ── Scene & Camera ──
-    const scene = new THREE.Scene();
+    const scene  = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
     camera.position.z = 5;
 
     function syncSize() {
-      const w = container.offsetWidth;
-      const h = container.offsetHeight;
+      const w = container.offsetWidth  || 1;
+      const h = container.offsetHeight || 1;
       renderer.setSize(w, h);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
     }
     syncSize();
 
+    // ── ResizeObserver — fires on container resize, not just window ──
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(syncSize).observe(container);
+    } else {
+      window.addEventListener('resize', syncSize, { passive: true });
+    }
+
     // ── Core geometry: nested wireframe icosahedra ──
     const icoOuter = new THREE.Mesh(
       new THREE.IcosahedronGeometry(1.0, 1),
       new THREE.MeshBasicMaterial({ color: 0x506383, wireframe: true, transparent: true, opacity: 0.55 })
     );
-
     const icoInner = new THREE.Mesh(
       new THREE.IcosahedronGeometry(0.52, 1),
       new THREE.MeshBasicMaterial({ color: 0xF0F0EE, wireframe: true, transparent: true, opacity: 0.2 })
     );
-
     scene.add(icoOuter, icoInner);
 
-    // ── Particles on a spherical shell (Fibonacci distribution) ──
-    const N = 180;
+    // ── Particles — fewer on mobile for performance ──
+    const N           = isMobile ? 80  : 180;
+    const MAX_CONN    = isMobile ? 50  : 140;
+    const MAX_DIST_SQ = isMobile ? 0.64 : 0.5184; // 0.8² vs 0.72²
     const rawPos = new Float32Array(N * 3);
     const orbits = [];
 
@@ -581,32 +597,29 @@ document.addEventListener('DOMContentLoaded', () => {
         phi,
         theta: theta + Math.random() * 0.5,
         r,
-        dTheta: (Math.random() - 0.5) * 0.005,
-        dPhi:   (Math.random() - 0.5) * 0.004,
+        dTheta: (Math.random() - 0.5) * (isMobile ? 0.004 : 0.005),
+        dPhi:   (Math.random() - 0.5) * (isMobile ? 0.003 : 0.004),
       });
     }
 
-    const pGeo = new THREE.BufferGeometry();
+    const pGeo   = new THREE.BufferGeometry();
     pGeo.setAttribute('position', new THREE.BufferAttribute(rawPos, 3));
     const points = new THREE.Points(pGeo, new THREE.PointsMaterial({
       color: 0x7A899B, size: 0.028, transparent: true, opacity: 0.85, sizeAttenuation: true
     }));
     scene.add(points);
 
-    // ── Connection lines between nearby particles ──
-    const MAX_CONNECTIONS = 140;
-    const MAX_DIST = 0.72;
+    // ── Connection lines ──
     const connIdx = [];
-
     outer:
     for (let i = 0; i < N; i++) {
       for (let j = i + 1; j < N; j++) {
         const dx = rawPos[i*3]   - rawPos[j*3];
         const dy = rawPos[i*3+1] - rawPos[j*3+1];
         const dz = rawPos[i*3+2] - rawPos[j*3+2];
-        if (dx*dx + dy*dy + dz*dz < MAX_DIST * MAX_DIST) {
+        if (dx*dx + dy*dy + dz*dz < MAX_DIST_SQ) {
           connIdx.push(i, j);
-          if (connIdx.length / 2 >= MAX_CONNECTIONS) break outer;
+          if (connIdx.length / 2 >= MAX_CONN) break outer;
         }
       }
     }
@@ -614,16 +627,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const lBuf = new Float32Array(connIdx.length * 3);
     const lGeo = new THREE.BufferGeometry();
     lGeo.setAttribute('position', new THREE.BufferAttribute(lBuf, 3));
-    const lineSegs = new THREE.LineSegments(lGeo,
+    scene.add(new THREE.LineSegments(lGeo,
       new THREE.LineBasicMaterial({ color: 0x506383, transparent: true, opacity: 0.2 })
-    );
-    scene.add(lineSegs);
+    ));
 
-    // ── Mouse parallax ──
+    // ── Parallax — mouse on desktop, touch/gyro on mobile ──
     let tRotX = 0, tRotY = 0, cRotX = 0, cRotY = 0;
-    document.addEventListener('mousemove', (e) => {
-      tRotY = ((e.clientX / window.innerWidth)  - 0.5) * 0.55;
-      tRotX = ((e.clientY / window.innerHeight) - 0.5) * 0.38;
+
+    if (!isMobile) {
+      document.addEventListener('mousemove', (e) => {
+        tRotY = ((e.clientX / window.innerWidth)  - 0.5) * 0.55;
+        tRotX = ((e.clientY / window.innerHeight) - 0.5) * 0.38;
+      });
+    } else {
+      // Touch drag parallax
+      let lastTX = null, lastTY = null;
+      canvas.addEventListener('touchmove', (e) => {
+        const t = e.touches[0];
+        if (lastTX !== null) {
+          tRotY += (t.clientX - lastTX) * 0.003;
+          tRotX += (t.clientY - lastTY) * 0.002;
+          tRotY = Math.max(-0.5, Math.min(0.5, tRotY));
+          tRotX = Math.max(-0.35, Math.min(0.35, tRotX));
+        }
+        lastTX = t.clientX; lastTY = t.clientY;
+      }, { passive: true });
+      canvas.addEventListener('touchend', () => { lastTX = null; lastTY = null; });
+
+      // Device orientation (gyroscope) if available
+      if (typeof DeviceOrientationEvent !== 'undefined') {
+        window.addEventListener('deviceorientation', (e) => {
+          if (e.gamma == null) return;
+          tRotY = (e.gamma / 45) * 0.4;   // left/right tilt
+          tRotX = (e.beta  / 90) * 0.25;  // forward/back tilt
+        }, { passive: true });
+      }
+    }
+
+    // ── Pause when tab hidden (saves battery on mobile) ──
+    let paused = false;
+    document.addEventListener('visibilitychange', () => {
+      paused = document.hidden;
     });
 
     // ── Animation loop ──
@@ -631,36 +675,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function animate() {
       requestAnimationFrame(animate);
+      if (paused) return;
+
       const t = (performance.now() - t0) * 0.001;
 
-      // Rotate icosahedra independently
       icoOuter.rotation.y =  t * 0.20;
       icoOuter.rotation.x =  t * 0.10;
       icoInner.rotation.y = -t * 0.25;
       icoInner.rotation.z =  t * 0.15;
 
-      // Smooth parallax follow
       cRotX += (tRotX - cRotX) * 0.04;
       cRotY += (tRotY - cRotY) * 0.04;
       scene.rotation.x = cRotX;
       scene.rotation.y = cRotY;
 
-      // Drift particles along their orbits
       const pos = pGeo.attributes.position.array;
       for (let i = 0; i < N; i++) {
         const o = orbits[i];
         o.theta += o.dTheta;
         o.phi   += o.dPhi;
-        if (o.phi < 0.08)            { o.phi =  0.08;           o.dPhi *= -1; }
-        if (o.phi > Math.PI - 0.08)  { o.phi = Math.PI - 0.08;  o.dPhi *= -1; }
-
+        if (o.phi < 0.08)           { o.phi = 0.08;            o.dPhi *= -1; }
+        if (o.phi > Math.PI - 0.08) { o.phi = Math.PI - 0.08;  o.dPhi *= -1; }
         pos[i*3]     = o.r * Math.sin(o.phi) * Math.cos(o.theta);
         pos[i*3 + 1] = o.r * Math.sin(o.phi) * Math.sin(o.theta);
         pos[i*3 + 2] = o.r * Math.cos(o.phi);
       }
       pGeo.attributes.position.needsUpdate = true;
 
-      // Update line segment endpoints
       const lb = lGeo.attributes.position.array;
       for (let k = 0; k < connIdx.length; k += 2) {
         const a = connIdx[k], b = connIdx[k + 1];
@@ -674,11 +715,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     animate();
-
-    // Fade canvas in once running
     requestAnimationFrame(() => canvas.classList.add('ready'));
-
-    window.addEventListener('resize', syncSize);
   }
 
   // ─── CONSOLE BRANDING ──────────────────────
