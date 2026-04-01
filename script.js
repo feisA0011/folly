@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
       preloader.classList.add('done');
       document.body.classList.add('loaded');
       initAnimations();
+      initThreeScene();
     }, 400);
   });
 
@@ -39,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         preloader.classList.add('done');
         document.body.classList.add('loaded');
         initAnimations();
+        initThreeScene();
       }, 200);
     }
   }, 5000);
@@ -521,6 +523,163 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+
+  // ─── THREE.JS HERO SCENE ───────────────────
+  function initThreeScene() {
+    if (typeof THREE === 'undefined') return;
+    const canvas = document.getElementById('hero-canvas');
+    if (!canvas) return;
+
+    const container = canvas.parentElement;
+
+    // ── Renderer ──
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // ── Scene & Camera ──
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    camera.position.z = 5;
+
+    function syncSize() {
+      const w = container.offsetWidth;
+      const h = container.offsetHeight;
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    syncSize();
+
+    // ── Core geometry: nested wireframe icosahedra ──
+    const icoOuter = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1.0, 1),
+      new THREE.MeshBasicMaterial({ color: 0x506383, wireframe: true, transparent: true, opacity: 0.55 })
+    );
+
+    const icoInner = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.52, 1),
+      new THREE.MeshBasicMaterial({ color: 0xF0F0EE, wireframe: true, transparent: true, opacity: 0.2 })
+    );
+
+    scene.add(icoOuter, icoInner);
+
+    // ── Particles on a spherical shell (Fibonacci distribution) ──
+    const N = 180;
+    const rawPos = new Float32Array(N * 3);
+    const orbits = [];
+
+    for (let i = 0; i < N; i++) {
+      const phi   = Math.acos(1 - (2 * (i + 0.5)) / N);
+      const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+      const r     = 1.55 + Math.random() * 0.75;
+
+      rawPos[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+      rawPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      rawPos[i * 3 + 2] = r * Math.cos(phi);
+
+      orbits.push({
+        phi,
+        theta: theta + Math.random() * 0.5,
+        r,
+        dTheta: (Math.random() - 0.5) * 0.005,
+        dPhi:   (Math.random() - 0.5) * 0.004,
+      });
+    }
+
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(rawPos, 3));
+    const points = new THREE.Points(pGeo, new THREE.PointsMaterial({
+      color: 0x7A899B, size: 0.028, transparent: true, opacity: 0.85, sizeAttenuation: true
+    }));
+    scene.add(points);
+
+    // ── Connection lines between nearby particles ──
+    const MAX_CONNECTIONS = 140;
+    const MAX_DIST = 0.72;
+    const connIdx = [];
+
+    outer:
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        const dx = rawPos[i*3]   - rawPos[j*3];
+        const dy = rawPos[i*3+1] - rawPos[j*3+1];
+        const dz = rawPos[i*3+2] - rawPos[j*3+2];
+        if (dx*dx + dy*dy + dz*dz < MAX_DIST * MAX_DIST) {
+          connIdx.push(i, j);
+          if (connIdx.length / 2 >= MAX_CONNECTIONS) break outer;
+        }
+      }
+    }
+
+    const lBuf = new Float32Array(connIdx.length * 3);
+    const lGeo = new THREE.BufferGeometry();
+    lGeo.setAttribute('position', new THREE.BufferAttribute(lBuf, 3));
+    const lineSegs = new THREE.LineSegments(lGeo,
+      new THREE.LineBasicMaterial({ color: 0x506383, transparent: true, opacity: 0.2 })
+    );
+    scene.add(lineSegs);
+
+    // ── Mouse parallax ──
+    let tRotX = 0, tRotY = 0, cRotX = 0, cRotY = 0;
+    document.addEventListener('mousemove', (e) => {
+      tRotY = ((e.clientX / window.innerWidth)  - 0.5) * 0.55;
+      tRotX = ((e.clientY / window.innerHeight) - 0.5) * 0.38;
+    });
+
+    // ── Animation loop ──
+    const t0 = performance.now();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const t = (performance.now() - t0) * 0.001;
+
+      // Rotate icosahedra independently
+      icoOuter.rotation.y =  t * 0.20;
+      icoOuter.rotation.x =  t * 0.10;
+      icoInner.rotation.y = -t * 0.25;
+      icoInner.rotation.z =  t * 0.15;
+
+      // Smooth parallax follow
+      cRotX += (tRotX - cRotX) * 0.04;
+      cRotY += (tRotY - cRotY) * 0.04;
+      scene.rotation.x = cRotX;
+      scene.rotation.y = cRotY;
+
+      // Drift particles along their orbits
+      const pos = pGeo.attributes.position.array;
+      for (let i = 0; i < N; i++) {
+        const o = orbits[i];
+        o.theta += o.dTheta;
+        o.phi   += o.dPhi;
+        if (o.phi < 0.08)            { o.phi =  0.08;           o.dPhi *= -1; }
+        if (o.phi > Math.PI - 0.08)  { o.phi = Math.PI - 0.08;  o.dPhi *= -1; }
+
+        pos[i*3]     = o.r * Math.sin(o.phi) * Math.cos(o.theta);
+        pos[i*3 + 1] = o.r * Math.sin(o.phi) * Math.sin(o.theta);
+        pos[i*3 + 2] = o.r * Math.cos(o.phi);
+      }
+      pGeo.attributes.position.needsUpdate = true;
+
+      // Update line segment endpoints
+      const lb = lGeo.attributes.position.array;
+      for (let k = 0; k < connIdx.length; k += 2) {
+        const a = connIdx[k], b = connIdx[k + 1];
+        const base = k * 3;
+        lb[base]     = pos[a*3];     lb[base + 1] = pos[a*3 + 1]; lb[base + 2] = pos[a*3 + 2];
+        lb[base + 3] = pos[b*3];     lb[base + 4] = pos[b*3 + 1]; lb[base + 5] = pos[b*3 + 2];
+      }
+      lGeo.attributes.position.needsUpdate = true;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Fade canvas in once running
+    requestAnimationFrame(() => canvas.classList.add('ready'));
+
+    window.addEventListener('resize', syncSize);
+  }
 
   // ─── CONSOLE BRANDING ──────────────────────
   console.log(
