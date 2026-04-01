@@ -9,12 +9,7 @@
   <!-- Preconnects -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://prod.spline.design" crossorigin>
   <link rel="preconnect" href="https://unpkg.com" crossorigin>
-
-  <!-- Prefetch Spline scene -->
-  <link rel="prefetch" href="https://prod.spline.design/pn8OKuZsuUSi5MTmRRpgxZSY/scene.splinecode" as="fetch" crossorigin>
-  <link rel="modulepreload" href="https://unpkg.com/@splinetool/viewer@1.9.56/build/spline-viewer.js">
 
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -22,8 +17,8 @@
   <!-- Styles -->
   <link rel="stylesheet" href="styles.css">
 
-  <!-- Spline 3D Viewer -->
-  <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.56/build/spline-viewer.js"></script>
+  <!-- Three.js -->
+  <script src="https://unpkg.com/three@0.160.1/build/three.min.js"></script>
 
   <!-- GSAP + ScrollTrigger -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
@@ -90,17 +85,8 @@
       </div>
 
       <div class="hero-3d-container" id="spline-container">
-        <spline-viewer
-          url="https://prod.spline.design/pn8OKuZsuUSi5MTmRRpgxZSY/scene.splinecode"
-          events-target="global"
-          loading-anim-type="spinner-big-dark"
-        ></spline-viewer>
-        <div class="hero-3d-fallback" id="hero-3d-fallback">
-          <div class="placeholder-glow"></div>
-          <div class="placeholder-ring"></div>
-          <div class="placeholder-ring placeholder-ring--2"></div>
-          <div class="placeholder-text">3D</div>
-        </div>
+        <canvas id="hero-canvas"></canvas>
+        <div class="hero-3d-glow" aria-hidden="true"></div>
       </div>
 
       <div class="hero-tagline" id="hero-tagline">
