@@ -127,24 +127,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // ─── NAVBAR ─────────────────────────────────
   const navbar = document.getElementById('navbar');
   let lastScrollY = 0;
-  let scrollDirection = 'up';
 
   function handleNavScroll() {
     const currentY = window.scrollY || document.documentElement.scrollTop;
 
-    if (currentY > 100) {
-      navbar.style.background = 'rgba(46, 65, 96, 0.92)';
+    // Add/remove scrolled class for background
+    if (currentY > 80) {
+      navbar.classList.add('scrolled');
     } else {
-      navbar.style.background = 'rgba(46, 65, 96, 0.6)';
+      navbar.classList.remove('scrolled');
     }
 
-    // Hide/show on scroll direction
-    if (currentY > lastScrollY && currentY > 200) {
-      navbar.classList.add('hidden');
-      scrollDirection = 'down';
-    } else {
-      navbar.classList.remove('hidden');
-      scrollDirection = 'up';
+    // Hide on scroll-down, show on scroll-up (only when menu is closed)
+    if (!menuOpen) {
+      if (currentY > lastScrollY && currentY > 200) {
+        navbar.classList.add('hidden');
+      } else {
+        navbar.classList.remove('hidden');
+      }
     }
 
     lastScrollY = currentY;
@@ -152,39 +152,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('scroll', handleNavScroll, { passive: true });
 
-  // ─── MOBILE NAV ─────────────────────────────
-  const mobileToggle = document.getElementById('nav-mobile-toggle');
-  const navLinks = document.getElementById('nav-links');
+  // ─── FULLSCREEN MENU ────────────────────────
+  const burgerBtn = document.getElementById('nav-burger');
+  const menuOverlay = document.getElementById('menu-overlay');
   let menuOpen = false;
 
-  if (mobileToggle) {
-    mobileToggle.addEventListener('click', () => {
-      menuOpen = !menuOpen;
+  function openMenu() {
+    menuOpen = true;
+    burgerBtn.classList.add('open');
+    menuOverlay.classList.add('open');
+    navbar.classList.add('menu-active');
+    navbar.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    if (lenis) lenis.stop();
+  }
 
+  function closeMenu() {
+    menuOpen = false;
+    burgerBtn.classList.remove('open');
+    menuOverlay.classList.remove('open');
+    navbar.classList.remove('menu-active');
+    document.body.style.overflow = '';
+    if (lenis) lenis.start();
+  }
+
+  if (burgerBtn) {
+    burgerBtn.addEventListener('click', () => {
       if (menuOpen) {
-        navLinks.classList.add('open');
-        mobileToggle.children[0].style.transform = 'rotate(45deg) translate(3px, 3px)';
-        mobileToggle.children[1].style.transform = 'rotate(-45deg)';
-        if (lenis) lenis.stop();
+        closeMenu();
       } else {
-        navLinks.classList.remove('open');
-        mobileToggle.children[0].style.transform = '';
-        mobileToggle.children[1].style.transform = '';
-        if (lenis) lenis.start();
+        openMenu();
       }
     });
+  }
 
-    // Close menu on link click
-    navLinks.querySelectorAll('a').forEach(link => {
+  // Close menu on link click
+  if (menuOverlay) {
+    menuOverlay.querySelectorAll('.menu-link').forEach(link => {
       link.addEventListener('click', () => {
-        if (menuOpen) {
-          menuOpen = false;
-          navLinks.classList.remove('open');
-          mobileToggle.children[0].style.transform = '';
-          mobileToggle.children[1].style.transform = '';
-          if (lenis) lenis.start();
-        }
+        closeMenu();
       });
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && menuOpen) {
+        closeMenu();
+      }
     });
   }
 
