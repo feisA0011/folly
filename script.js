@@ -399,6 +399,47 @@ document.addEventListener('DOMContentLoaded', () => {
       );
     });
 
+    // ── Skill Categories Stagger ──
+    const skillCategories = gsap.utils.toArray('.skill-category');
+    skillCategories.forEach((cat, i) => {
+      gsap.fromTo(cat,
+        { opacity: 0, y: 60, scale: 0.97 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.9,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: cat,
+            start: 'top 88%',
+            toggleActions: 'play none none none'
+          },
+          delay: (i % 2) * 0.15
+        }
+      );
+    });
+
+    // ── Skill Tags Cascade ──
+    document.querySelectorAll('.skill-category').forEach(cat => {
+      const tags = cat.querySelectorAll('.skill-tags span');
+      gsap.fromTo(tags,
+        { opacity: 0, y: 10 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.4,
+          ease: 'power2.out',
+          stagger: 0.04,
+          scrollTrigger: {
+            trigger: cat,
+            start: 'top 80%',
+            toggleActions: 'play none none none'
+          }
+        }
+      );
+    });
+
     // ── Process Steps Stagger ──
     const processSteps = gsap.utils.toArray('.process-step');
     processSteps.forEach((step, i) => {
@@ -422,21 +463,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Stat Counter Animation ──
     document.querySelectorAll('.stat-number[data-count]').forEach(el => {
       const target = parseInt(el.getAttribute('data-count'));
+      const counter = { val: 0 };
 
-      gsap.fromTo(el,
-        { textContent: 0 },
-        {
-          textContent: target,
-          duration: 2,
-          ease: 'power2.out',
-          snap: { textContent: 1 },
-          scrollTrigger: {
-            trigger: el,
-            start: 'top 85%',
-            toggleActions: 'play none none none'
-          }
+      gsap.to(counter, {
+        val: target,
+        duration: 2.5,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 90%',
+          toggleActions: 'play none none none'
+        },
+        onUpdate: () => {
+          el.textContent = Math.round(counter.val);
         }
-      );
+      });
     });
 
     // ── Contact Links Stagger ──
