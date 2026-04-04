@@ -741,13 +741,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ─── CHAT WIDGET ────────────────────────────────
   function initChatBar() {
-    const messages = document.getElementById('chat-bar-messages');
-    const input    = document.getElementById('chat-bar-input');
-    const sendBtn  = document.getElementById('chat-bar-send-btn');
+    const wrap      = document.getElementById('chat-bar-wrap');
+    const toggleBtn = document.getElementById('chat-bar-toggle-btn');
+    const messages  = document.getElementById('chat-bar-messages');
+    const input     = document.getElementById('chat-bar-input');
+    const sendBtn   = document.getElementById('chat-bar-send-btn');
 
-    if (!input || !sendBtn) return;
+    if (!input || !sendBtn || !toggleBtn) return;
 
+    let isOpen  = false;
     let greeted = false;
+
+    function openBar() {
+      isOpen = true;
+      wrap.classList.add('open');
+      toggleBtn.setAttribute('aria-label', 'Close chat');
+      setTimeout(() => input.focus(), 260);
+    }
+
+    function closeBar() {
+      isOpen = false;
+      wrap.classList.remove('open');
+      toggleBtn.setAttribute('aria-label', 'Open chat');
+    }
+
+    toggleBtn.addEventListener('click', () => isOpen ? closeBar() : openBar());
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isOpen) closeBar();
+    });
 
     // ── Auto-reply corpus ──
     const REPLIES = [
@@ -827,17 +849,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     sendBtn.addEventListener('click', send);
 
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && messages.classList.contains('has-messages')) {
-        messages.innerHTML = '';
-        messages.classList.remove('has-messages');
-      }
-    });
-
-    // Greet after 8s if not yet interacted
+    // Greet after 8s — open bar and show greeting
     setTimeout(() => {
       if (!greeted) {
         greeted = true;
+        openBar();
         appendMsg("Hey 👋 — ask me anything about Feisal's work, services, or how to get in touch.", 'bot');
       }
     }, 8000);

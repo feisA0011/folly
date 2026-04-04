@@ -1914,9 +1914,9 @@ a.menu-footer-link:hover {
 .chat-bar-messages::-webkit-scrollbar-track { background: transparent; }
 .chat-bar-messages::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 2px; }
 
-.chat-bar-messages.has-messages { display: flex; }
+.chat-bar-wrap.open .chat-bar-messages.has-messages { display: flex; }
 
-/* Input bar */
+/* Input bar — hidden until toggled open */
 .chat-bar {
   background: #1c1d21;
   border: 1px solid rgba(255, 255, 255, 0.07);
@@ -1926,7 +1926,16 @@ a.menu-footer-link:hover {
     0 0 0 1px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
   overflow: hidden;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.28s var(--ease-smooth), border-color 0.2s ease;
+}
+
+.chat-bar-wrap.open .chat-bar {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
 }
 
 .chat-bar:focus-within {
@@ -1935,6 +1944,54 @@ a.menu-footer-link:hover {
     0 6px 36px rgba(0, 0, 0, 0.6),
     0 0 0 1px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Toggle button */
+.chat-bar-toggle-btn {
+  align-self: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #1c1d21;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(0, 0, 0, 0.3);
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chat-bar-toggle-btn:hover {
+  background: #26272e;
+  transform: scale(1.07);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
+.chat-bar-toggle-icon-open,
+.chat-bar-toggle-icon-close {
+  position: absolute;
+  transition: opacity 0.2s ease, transform 0.25s var(--ease-smooth);
+}
+
+.chat-bar-toggle-icon-close {
+  opacity: 0;
+  transform: rotate(-45deg) scale(0.7);
+}
+
+.chat-bar-wrap.open .chat-bar-toggle-icon-open {
+  opacity: 0;
+  transform: rotate(45deg) scale(0.7);
+}
+
+.chat-bar-wrap.open .chat-bar-toggle-icon-close {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
 }
 
 /* Textarea */
