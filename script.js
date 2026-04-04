@@ -3,6 +3,11 @@
    GSAP ScrollTrigger + Lenis Smooth Scroll
    =========================================== */
 
+// Load pretext for chat bubble shrink-wrapping
+import('./node_modules/@chenglou/pretext/dist/layout.js')
+  .then(m => { window._pretext = m; })
+  .catch(() => {});
+
 document.addEventListener('DOMContentLoaded', () => {
 
   // ─── PRELOADER ───────────────────────────────
@@ -797,6 +802,24 @@ document.addEventListener('DOMContentLoaded', () => {
       return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
+    function shrinkWrapBubble(el, text) {
+      if (!window._pretext) return;
+      const bubble = el.querySelector('.chat-msg-bubble');
+      if (!bubble) return;
+      const { prepareWithSegments, walkLineRanges } = window._pretext;
+      const cs       = getComputedStyle(bubble);
+      const fontStr  = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily.split(',')[0].trim().replace(/['"]/g, '')}`;
+      const paddingH = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+      const wrapW    = wrap.offsetWidth || 400;
+      const maxW     = wrapW * 0.84 - paddingH;
+      if (maxW <= 0) return;
+      const prepared = prepareWithSegments(text, fontStr, { whiteSpace: 'pre-wrap' });
+      let maxLineW   = 0;
+      walkLineRanges(prepared, maxW, line => { if (line.width > maxLineW) maxLineW = line.width; });
+      bubble.style.width    = Math.ceil(maxLineW + paddingH) + 'px';
+      bubble.style.maxWidth = '100%';
+    }
+
     function appendMsg(text, role) {
       const el = document.createElement('div');
       el.className = `chat-msg chat-msg--${role}`;
@@ -804,6 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
       messages.appendChild(el);
       messages.classList.add('has-messages');
       messages.scrollTop = messages.scrollHeight;
+      shrinkWrapBubble(el, text);
     }
 
     function showTyping() {
