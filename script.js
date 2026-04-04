@@ -29,6 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
       document.body.classList.add('loaded');
       initAnimations();
       initThreeScene();
+      initChatBar();
+      initGhostCursors();
     }, 400);
   });
 
@@ -41,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('loaded');
         initAnimations();
         initThreeScene();
+        initGhostCursors();
       }, 200);
     }
   }, 5000);
@@ -734,6 +737,233 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(() => canvas.classList.add('ready'));
 
     window.addEventListener('resize', syncSize);
+  }
+
+  // ─── CHAT WIDGET ────────────────────────────────
+  function initChatBar() {
+    const messages = document.getElementById('chat-bar-messages');
+    const input    = document.getElementById('chat-bar-input');
+    const sendBtn  = document.getElementById('chat-bar-send-btn');
+
+    if (!input || !sendBtn) return;
+
+    let greeted = false;
+
+    // ── Auto-reply corpus ──
+    const REPLIES = [
+      { re: /\b(hi|hello|hey|sup|yo|howdy)\b/i,
+        text: "Hey! 👋 I'm an AI stand-in for Feisal. Ask me about his work, services, or how to get in touch." },
+      { re: /\b(service|offer|speciali[sz]|what do you do|capabilities|help with)\b/i,
+        text: "Feisal does three things exceptionally well:\n\n→ AI Agent Engineering — LLM orchestration, RAG pipelines, autonomous agents\n→ Workflow Automation — replacing manual ops with intelligent systems\n→ Full-Stack Dev — Next.js apps built for scale\n\nAnything specific?" },
+      { re: /\b(project|work|portfolio|built|made|example|nexbot|flowforge|datapulse|mindstack)\b/i,
+        text: "Scroll up to the WORK section — NEXBOT AI, FlowForge, DataPulse, and MindStack. Each covers a different part of the AI/automation space. Want details on any one?" },
+      { re: /\b(skill|tech|stack|language|framework|tool|python|react|node|langchain)\b/i,
+        text: "Core stack:\n\nAI/LLM — LangChain · OpenAI · Claude · LlamaIndex\nFrontend — React · Next.js · TypeScript · GSAP\nBackend — Node.js · Python · FastAPI\nInfra — Supabase · Docker · AWS · Vercel" },
+      { re: /\b(contact|hire|email|reach|talk|work together|quote|price|cost|rate|budget|avail|freelance|contract)\b/i,
+        text: "Feisal's available for freelance & contract work — Q2 2026 onwards.\n\nBest way in: hello@fma.dev\nTypically responds within 24 hours. 🚀" },
+      { re: /\b(about|who|background|story|experience|year|london)\b/i,
+        text: "Feisal is a London-based Agent Engineer sitting at the intersection of AI, automation, and clean engineering.\n\n50+ projects · 3+ years · 15+ AI agents shipped.\n\nPhilosophy: understand deeply, engineer simply, ship with intention." },
+      { re: /.*/,
+        text: "Good question — for anything detailed, Feisal's the right person. Reach him at hello@fma.dev. He's pretty quick to respond." },
+    ];
+
+    function getReply(text) {
+      return (REPLIES.find(r => r.re.test(text)) || REPLIES[REPLIES.length - 1]).text;
+    }
+
+    function timestamp() {
+      return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function appendMsg(text, role) {
+      const el = document.createElement('div');
+      el.className = `chat-msg chat-msg--${role}`;
+      el.innerHTML = `<div class="chat-msg-bubble">${text.replace(/\n/g, '<br>')}</div><span class="chat-msg-time">${timestamp()}</span>`;
+      messages.appendChild(el);
+      messages.classList.add('has-messages');
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function showTyping() {
+      const el = document.createElement('div');
+      el.className = 'chat-typing';
+      el.innerHTML = '<span></span><span></span><span></span>';
+      messages.appendChild(el);
+      messages.classList.add('has-messages');
+      messages.scrollTop = messages.scrollHeight;
+      return el;
+    }
+
+    function send() {
+      const text = input.value.trim();
+      if (!text) return;
+      if (!greeted) {
+        greeted = true;
+        appendMsg("Hey 👋 — ask me anything about Feisal's work, services, or how to get in touch.", 'bot');
+      }
+      appendMsg(text, 'user');
+      input.value = '';
+      input.style.height = 'auto';
+      sendBtn.disabled = true;
+      const typing = showTyping();
+      setTimeout(() => {
+        typing.remove();
+        appendMsg(getReply(text), 'bot');
+      }, 700 + Math.random() * 600);
+    }
+
+    input.addEventListener('input', () => {
+      sendBtn.disabled = !input.value.trim();
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (!sendBtn.disabled) send();
+      }
+    });
+
+    sendBtn.addEventListener('click', send);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && messages.classList.contains('has-messages')) {
+        messages.innerHTML = '';
+        messages.classList.remove('has-messages');
+      }
+    });
+
+    // Greet after 8s if not yet interacted
+    setTimeout(() => {
+      if (!greeted) {
+        greeted = true;
+        appendMsg("Hey 👋 — ask me anything about Feisal's work, services, or how to get in touch.", 'bot');
+      }
+    }, 8000);
+  }
+
+  // ─── GHOST CURSORS (Live Presence Simulation) ───
+  function initGhostCursors() {
+    if (window.matchMedia('(pointer: coarse)').matches) return;
+
+    const NAMES   = ['alex', 'kai', 'sam', 'morgan', 'riley', 'drew', 'casey', 'jordan'];
+    const PALETTE = [
+      { fill: 'rgba(122,137,155,0.95)', bg: 'rgba(36,53,83,0.88)',  border: 'rgba(122,137,155,0.35)', text: '#a0b4c4' },
+      { fill: 'rgba(80,99,131,0.95)',   bg: 'rgba(26,42,74,0.88)',  border: 'rgba(80,99,131,0.35)',   text: '#8fa3c0' },
+      { fill: 'rgba(210,220,232,0.88)', bg: 'rgba(46,65,96,0.88)',  border: 'rgba(210,220,232,0.25)', text: '#c8d5e0' },
+    ];
+
+    // Live visitor badge
+    const badge = document.createElement('div');
+    badge.className = 'live-badge';
+    badge.innerHTML = '<span class="live-badge-dot"></span><span class="live-badge-text">3 VIEWING</span>';
+    document.body.appendChild(badge);
+
+    const shuffled = [...NAMES].sort(() => Math.random() - 0.5);
+    const ghosts   = [];
+
+    for (let i = 0; i < 3; i++) {
+      const c  = PALETTE[i];
+      const el = document.createElement('div');
+      el.className = 'ghost-cursor';
+      el.innerHTML = `
+        <svg width="18" height="22" viewBox="0 0 18 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3.5 2L3.5 17.5L7.5 13.5L10.5 20L12.5 19L9.5 12.5L15 12.5Z"
+                fill="${c.fill}" stroke="rgba(0,0,0,0.2)" stroke-width="0.5" stroke-linejoin="round"/>
+        </svg>
+        <span class="ghost-label" style="background:${c.bg};border-color:${c.border};color:${c.text}">${shuffled[i]}</span>
+      `;
+      document.body.appendChild(el);
+
+      ghosts.push({
+        el,
+        colorIdx: i,
+        x: window.innerWidth  * (0.15 + Math.random() * 0.7),
+        y: window.innerHeight * (0.15 + Math.random() * 0.7),
+        targetX: 0, targetY: 0,
+        speed: 0.025 + Math.random() * 0.03,
+        opacity: 0,
+        state: 'entering',
+        timer: 0,
+        delay: i * 1800 + Math.random() * 500,
+      });
+    }
+
+    function newTarget(g) {
+      const pad = 60;
+      g.targetX = pad + Math.random() * (window.innerWidth  - pad * 2);
+      g.targetY = pad + Math.random() * (window.innerHeight - pad * 2);
+    }
+
+    let t0 = null;
+    function tick(ts) {
+      if (!t0) t0 = ts;
+      const elapsed = ts - t0;
+
+      ghosts.forEach(g => {
+        if (elapsed < g.delay) return;
+
+        if (g.state === 'entering') {
+          g.opacity = Math.min(1, g.opacity + 0.016);
+          if (g.opacity < 0.05) newTarget(g);
+          if (g.opacity >= 0.99) g.state = 'moving';
+
+        } else if (g.state === 'moving') {
+          const dx = g.targetX - g.x, dy = g.targetY - g.y;
+          g.x += dx * g.speed;
+          g.y += dy * g.speed;
+          if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
+            g.state = 'idle';
+            g.timer = 80 + Math.random() * 160;
+          }
+
+        } else if (g.state === 'idle') {
+          g.x += (Math.random() - 0.5) * 0.4;
+          g.y += (Math.random() - 0.5) * 0.4;
+          if (--g.timer <= 0) {
+            g.state = Math.random() < 0.08 ? 'leaving' : 'moving';
+            if (g.state === 'moving') newTarget(g);
+          }
+
+        } else if (g.state === 'leaving') {
+          g.opacity = Math.max(0, g.opacity - 0.012);
+          if (g.opacity <= 0) {
+            const taken   = ghosts.map(h => h.el.querySelector('.ghost-label')?.textContent);
+            const fresh   = NAMES.filter(n => !taken.includes(n));
+            const newName = fresh.length ? fresh[0] : NAMES[Math.floor(Math.random() * NAMES.length)];
+            const lbl = g.el.querySelector('.ghost-label');
+            if (lbl) lbl.textContent = newName;
+
+            const edge = Math.floor(Math.random() * 4);
+            g.x = edge === 0 ? Math.random() * window.innerWidth  : edge === 1 ? window.innerWidth  + 20 : edge === 2 ? Math.random() * window.innerWidth  : -20;
+            g.y = edge === 0 ? -20 : edge === 1 ? Math.random() * window.innerHeight : edge === 2 ? window.innerHeight + 20 : Math.random() * window.innerHeight;
+            g.delay = 0;
+            g.state = 'entering';
+          }
+        }
+
+        g.el.style.transform = `translate(${g.x}px,${g.y}px)`;
+        g.el.style.opacity   = g.opacity;
+      });
+
+      requestAnimationFrame(tick);
+    }
+
+    // Start after hero entrance animations settle
+    setTimeout(() => {
+      badge.classList.add('visible');
+      requestAnimationFrame(tick);
+    }, 2500);
+
+    // Occasionally flicker the visitor count for realism
+    function flickerCount() {
+      const n   = 2 + Math.floor(Math.random() * 4);
+      const txt = badge.querySelector('.live-badge-text');
+      if (txt) txt.textContent = `${n} VIEWING`;
+      setTimeout(flickerCount, 9000 + Math.random() * 14000);
+    }
+    setTimeout(flickerCount, 6000);
   }
 
   // ─── CONSOLE BRANDING ──────────────────────
