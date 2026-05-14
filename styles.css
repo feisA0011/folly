@@ -152,6 +152,99 @@ img { max-width: 100%; display: block; }
 }
 
 /* ===========================
+   CRT EFFECTS — scanlines + vignette + flicker
+   =========================== */
+.crt-scanlines {
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(80, 99, 131, 0.035) 3px,
+    rgba(80, 99, 131, 0.035) 3px
+  );
+  animation: crtFlicker 7s infinite;
+}
+
+.crt-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 9996;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 55%,
+    rgba(10, 14, 25, 0.45) 100%
+  );
+}
+
+@keyframes crtFlicker {
+  0%, 95%, 100% { opacity: 1; }
+  96%           { opacity: 0.86; }
+  97%           { opacity: 1; }
+  98%           { opacity: 0.93; }
+}
+
+/* ===========================
+   GLITCH TEXT — RGB split on hero words
+   =========================== */
+.glitch-text {
+  position: relative;
+}
+
+.glitch-text.glitching::before,
+.glitch-text.glitching::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.glitch-text.glitching::before {
+  color: rgba(255, 90, 90, 0.85);
+  animation: rgbSplitR 0.55s steps(3) 1;
+}
+
+.glitch-text.glitching::after {
+  color: rgba(80, 220, 255, 0.85);
+  animation: rgbSplitB 0.55s steps(3) 1;
+}
+
+.hero-text-bottom .glitch-text.glitching::before,
+.hero-text-bottom .glitch-text.glitching::after {
+  -webkit-text-stroke: 2px currentColor;
+  color: rgba(255, 90, 90, 0.6);
+}
+.hero-text-bottom .glitch-text.glitching::after {
+  color: rgba(80, 220, 255, 0.6);
+}
+
+@keyframes rgbSplitR {
+  0%   { transform: translate(0, 0);   clip-path: inset(0); }
+  20%  { transform: translate(-4px, 1px); clip-path: inset(20% 0 60% 0); }
+  40%  { transform: translate(3px, -2px); clip-path: inset(50% 0 20% 0); }
+  60%  { transform: translate(-2px, 2px); clip-path: inset(10% 0 70% 0); }
+  80%  { transform: translate(1px, 0); clip-path: inset(70% 0 10% 0); }
+  100% { transform: translate(0, 0); clip-path: inset(0); }
+}
+
+@keyframes rgbSplitB {
+  0%   { transform: translate(0, 0);   clip-path: inset(0); }
+  20%  { transform: translate(4px, -1px); clip-path: inset(60% 0 20% 0); }
+  40%  { transform: translate(-3px, 2px); clip-path: inset(20% 0 50% 0); }
+  60%  { transform: translate(2px, -2px); clip-path: inset(70% 0 10% 0); }
+  80%  { transform: translate(-1px, 0); clip-path: inset(10% 0 70% 0); }
+  100% { transform: translate(0, 0); clip-path: inset(0); }
+}
+
+/* ===========================
    CUSTOM CURSOR
    =========================== */
 .cursor {

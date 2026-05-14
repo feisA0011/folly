@@ -550,12 +550,94 @@ document.addEventListener('DOMContentLoaded', () => {
     const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
     camera.position.z = 5;
 
+    // ── Post-process render target + fullscreen quad ──
+    const renderTarget = new THREE.WebGLRenderTarget(1, 1, {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      format: THREE.RGBAFormat,
+      type: THREE.UnsignedByteType
+    });
+
+    const postScene  = new THREE.Scene();
+    const postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+    const postMat = new THREE.ShaderMaterial({
+      transparent: true,
+      uniforms: {
+        tDiffuse:    { value: renderTarget.texture },
+        uTime:       { value: 0 },
+        uGlitch:     { value: 0 },
+        uResolution: { value: new THREE.Vector2(1, 1) }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        precision highp float;
+        uniform sampler2D tDiffuse;
+        uniform float uTime;
+        uniform float uGlitch;
+        uniform vec2  uResolution;
+        varying vec2 vUv;
+
+        float rand(vec2 co){
+          return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+        }
+
+        void main() {
+          vec2 uv = vUv;
+
+          // ── Horizontal block displacement (glitch) ──
+          float blockY = floor(uv.y * 18.0);
+          float blockNoise = rand(vec2(blockY, floor(uTime * 9.0)));
+          float displace = (blockNoise - 0.5) * uGlitch * 0.08;
+          uv.x += step(0.65, blockNoise) * displace;
+
+          // ── Chromatic aberration — radial, more at edges ──
+          vec2 dir = uv - 0.5;
+          float dist = length(dir);
+          float aberration = (0.0025 + uGlitch * 0.025) * dist;
+
+          vec4 r = texture2D(tDiffuse, uv + dir * aberration);
+          vec4 g = texture2D(tDiffuse, uv);
+          vec4 b = texture2D(tDiffuse, uv - dir * aberration);
+
+          vec4 color;
+          color.r = r.r;
+          color.g = g.g;
+          color.b = b.b;
+          color.a = max(max(r.a, g.a), b.a);
+
+          // ── Scanlines (subtle) ──
+          float scan = sin(uv.y * uResolution.y * 1.4) * 0.06;
+          color.rgb -= scan * color.a;
+
+          // ── Edge vignette ──
+          color.rgb *= 1.0 - dist * 0.35;
+
+          // ── Glitch noise burst ──
+          float burst = step(0.985, rand(vec2(floor(uTime * 30.0), 0.0))) * uGlitch;
+          color.rgb += burst * 0.15;
+
+          gl_FragColor = color;
+        }
+      `
+    });
+
+    postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMat));
+
     function syncSize() {
       const w = container.offsetWidth  || 1;
       const h = container.offsetHeight || 1;
       renderer.setSize(w, h);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      renderTarget.setSize(w * dpr, h * dpr);
+      postMat.uniforms.uResolution.value.set(w * dpr, h * dpr);
     }
     syncSize();
 
@@ -670,6 +752,38 @@ document.addEventListener('DOMContentLoaded', () => {
       paused = document.hidden;
     });
 
+    // ── Glitch pulse system ──
+    let glitchTarget = 0;
+    let glitchUntil  = 0;
+
+    function triggerGlitch(strength = 1.0, duration = 320) {
+      glitchTarget = strength;
+      glitchUntil  = performance.now() + duration;
+
+      // Sync CSS glitch on hero headings
+      document.querySelectorAll('.glitch-text').forEach(el => {
+        el.classList.remove('glitching');
+        // Force reflow so animation restarts
+        void el.offsetWidth;
+        el.classList.add('glitching');
+        setTimeout(() => el.classList.remove('glitching'), 600);
+      });
+    }
+    window.__follyGlitch = triggerGlitch;
+
+    // Initial glitch shortly after the scene appears
+    setTimeout(() => triggerGlitch(1.0, 380), 600);
+
+    // Periodic random glitches every 5–9s
+    function scheduleNextGlitch() {
+      const wait = 5000 + Math.random() * 4000;
+      setTimeout(() => {
+        if (!document.hidden) triggerGlitch(0.7 + Math.random() * 0.4, 260);
+        scheduleNextGlitch();
+      }, wait);
+    }
+    scheduleNextGlitch();
+
     // ── Animation loop ──
     const t0 = performance.now();
 
@@ -677,7 +791,8 @@ document.addEventListener('DOMContentLoaded', () => {
       requestAnimationFrame(animate);
       if (paused) return;
 
-      const t = (performance.now() - t0) * 0.001;
+      const now = performance.now();
+      const t   = (now - t0) * 0.001;
 
       icoOuter.rotation.y =  t * 0.20;
       icoOuter.rotation.x =  t * 0.10;
@@ -711,7 +826,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       lGeo.attributes.position.needsUpdate = true;
 
+      // Decay glitch back to idle baseline
+      const idleGlitch = 0.04;
+      if (now > glitchUntil) glitchTarget = idleGlitch;
+      const cur = postMat.uniforms.uGlitch.value;
+      postMat.uniforms.uGlitch.value = cur + (glitchTarget - cur) * 0.25;
+      postMat.uniforms.uTime.value   = t;
+
+      // Two-pass render: scene → renderTarget → post quad → canvas
+      renderer.setRenderTarget(renderTarget);
+      renderer.clear();
       renderer.render(scene, camera);
+      renderer.setRenderTarget(null);
+      renderer.clear();
+      renderer.render(postScene, postCamera);
     }
 
     animate();
