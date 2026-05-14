@@ -593,41 +593,139 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('hero-canvas');
     if (!canvas) return;
 
+    // ── WebGL support check ──
+    try {
+      const test = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!test) return; // silently skip — glow still shows
+    } catch (e) { return; }
+
     const container = canvas.parentElement;
+    const isMobile  = window.innerWidth < 768 || navigator.maxTouchPoints > 0;
 
     // ── Renderer ──
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // On old iPhones cap pixel ratio at 1 to avoid GPU overload
+    const dpr = isMobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: !isMobile });
+    renderer.setPixelRatio(dpr);
 
     // ── Scene & Camera ──
-    const scene = new THREE.Scene();
+    const scene  = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
     camera.position.z = 5;
 
+    // ── Post-process render target + fullscreen quad ──
+    const renderTarget = new THREE.WebGLRenderTarget(1, 1, {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      format: THREE.RGBAFormat,
+      type: THREE.UnsignedByteType
+    });
+
+    const postScene  = new THREE.Scene();
+    const postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+    const postMat = new THREE.ShaderMaterial({
+      transparent: true,
+      uniforms: {
+        tDiffuse:    { value: renderTarget.texture },
+        uTime:       { value: 0 },
+        uGlitch:     { value: 0 },
+        uResolution: { value: new THREE.Vector2(1, 1) }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        precision highp float;
+        uniform sampler2D tDiffuse;
+        uniform float uTime;
+        uniform float uGlitch;
+        uniform vec2  uResolution;
+        varying vec2 vUv;
+
+        float rand(vec2 co){
+          return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
+        }
+
+        void main() {
+          vec2 uv = vUv;
+
+          // ── Horizontal block displacement (glitch) ──
+          float blockY = floor(uv.y * 18.0);
+          float blockNoise = rand(vec2(blockY, floor(uTime * 9.0)));
+          float displace = (blockNoise - 0.5) * uGlitch * 0.08;
+          uv.x += step(0.65, blockNoise) * displace;
+
+          // ── Chromatic aberration — radial, more at edges ──
+          vec2 dir = uv - 0.5;
+          float dist = length(dir);
+          float aberration = (0.0025 + uGlitch * 0.025) * dist;
+
+          vec4 r = texture2D(tDiffuse, uv + dir * aberration);
+          vec4 g = texture2D(tDiffuse, uv);
+          vec4 b = texture2D(tDiffuse, uv - dir * aberration);
+
+          vec4 color;
+          color.r = r.r;
+          color.g = g.g;
+          color.b = b.b;
+          color.a = max(max(r.a, g.a), b.a);
+
+          // ── Scanlines (subtle) ──
+          float scan = sin(uv.y * uResolution.y * 1.4) * 0.06;
+          color.rgb -= scan * color.a;
+
+          // ── Edge vignette ──
+          color.rgb *= 1.0 - dist * 0.35;
+
+          // ── Glitch noise burst ──
+          float burst = step(0.985, rand(vec2(floor(uTime * 30.0), 0.0))) * uGlitch;
+          color.rgb += burst * 0.15;
+
+          gl_FragColor = color;
+        }
+      `
+    });
+
+    postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMat));
+
     function syncSize() {
-      const w = container.offsetWidth;
-      const h = container.offsetHeight;
+      const w = container.offsetWidth  || 1;
+      const h = container.offsetHeight || 1;
       renderer.setSize(w, h);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      renderTarget.setSize(w * dpr, h * dpr);
+      postMat.uniforms.uResolution.value.set(w * dpr, h * dpr);
     }
     syncSize();
+
+    // ── ResizeObserver — fires on container resize, not just window ──
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(syncSize).observe(container);
+    } else {
+      window.addEventListener('resize', syncSize, { passive: true });
+    }
 
     // ── Core geometry: nested wireframe icosahedra ──
     const icoOuter = new THREE.Mesh(
       new THREE.IcosahedronGeometry(1.0, 1),
       new THREE.MeshBasicMaterial({ color: 0x506383, wireframe: true, transparent: true, opacity: 0.55 })
     );
-
     const icoInner = new THREE.Mesh(
       new THREE.IcosahedronGeometry(0.52, 1),
       new THREE.MeshBasicMaterial({ color: 0xF0F0EE, wireframe: true, transparent: true, opacity: 0.2 })
     );
-
     scene.add(icoOuter, icoInner);
 
-    // ── Particles on a spherical shell (Fibonacci distribution) ──
-    const N = 180;
+    // ── Particles — fewer on mobile for performance ──
+    const N           = isMobile ? 80  : 180;
+    const MAX_CONN    = isMobile ? 50  : 140;
+    const MAX_DIST_SQ = isMobile ? 0.64 : 0.5184; // 0.8² vs 0.72²
     const rawPos = new Float32Array(N * 3);
     const orbits = [];
 
@@ -644,32 +742,29 @@ document.addEventListener('DOMContentLoaded', () => {
         phi,
         theta: theta + Math.random() * 0.5,
         r,
-        dTheta: (Math.random() - 0.5) * 0.005,
-        dPhi:   (Math.random() - 0.5) * 0.004,
+        dTheta: (Math.random() - 0.5) * (isMobile ? 0.004 : 0.005),
+        dPhi:   (Math.random() - 0.5) * (isMobile ? 0.003 : 0.004),
       });
     }
 
-    const pGeo = new THREE.BufferGeometry();
+    const pGeo   = new THREE.BufferGeometry();
     pGeo.setAttribute('position', new THREE.BufferAttribute(rawPos, 3));
     const points = new THREE.Points(pGeo, new THREE.PointsMaterial({
       color: 0x7A899B, size: 0.028, transparent: true, opacity: 0.85, sizeAttenuation: true
     }));
     scene.add(points);
 
-    // ── Connection lines between nearby particles ──
-    const MAX_CONNECTIONS = 140;
-    const MAX_DIST = 0.72;
+    // ── Connection lines ──
     const connIdx = [];
-
     outer:
     for (let i = 0; i < N; i++) {
       for (let j = i + 1; j < N; j++) {
         const dx = rawPos[i*3]   - rawPos[j*3];
         const dy = rawPos[i*3+1] - rawPos[j*3+1];
         const dz = rawPos[i*3+2] - rawPos[j*3+2];
-        if (dx*dx + dy*dy + dz*dz < MAX_DIST * MAX_DIST) {
+        if (dx*dx + dy*dy + dz*dz < MAX_DIST_SQ) {
           connIdx.push(i, j);
-          if (connIdx.length / 2 >= MAX_CONNECTIONS) break outer;
+          if (connIdx.length / 2 >= MAX_CONN) break outer;
         }
       }
     }
@@ -677,53 +772,114 @@ document.addEventListener('DOMContentLoaded', () => {
     const lBuf = new Float32Array(connIdx.length * 3);
     const lGeo = new THREE.BufferGeometry();
     lGeo.setAttribute('position', new THREE.BufferAttribute(lBuf, 3));
-    const lineSegs = new THREE.LineSegments(lGeo,
+    scene.add(new THREE.LineSegments(lGeo,
       new THREE.LineBasicMaterial({ color: 0x506383, transparent: true, opacity: 0.2 })
-    );
-    scene.add(lineSegs);
+    ));
 
-    // ── Mouse parallax ──
+    // ── Parallax — mouse on desktop, touch/gyro on mobile ──
     let tRotX = 0, tRotY = 0, cRotX = 0, cRotY = 0;
-    document.addEventListener('mousemove', (e) => {
-      tRotY = ((e.clientX / window.innerWidth)  - 0.5) * 0.55;
-      tRotX = ((e.clientY / window.innerHeight) - 0.5) * 0.38;
+
+    if (!isMobile) {
+      document.addEventListener('mousemove', (e) => {
+        tRotY = ((e.clientX / window.innerWidth)  - 0.5) * 0.55;
+        tRotX = ((e.clientY / window.innerHeight) - 0.5) * 0.38;
+      });
+    } else {
+      // Touch drag parallax
+      let lastTX = null, lastTY = null;
+      canvas.addEventListener('touchmove', (e) => {
+        const t = e.touches[0];
+        if (lastTX !== null) {
+          tRotY += (t.clientX - lastTX) * 0.003;
+          tRotX += (t.clientY - lastTY) * 0.002;
+          tRotY = Math.max(-0.5, Math.min(0.5, tRotY));
+          tRotX = Math.max(-0.35, Math.min(0.35, tRotX));
+        }
+        lastTX = t.clientX; lastTY = t.clientY;
+      }, { passive: true });
+      canvas.addEventListener('touchend', () => { lastTX = null; lastTY = null; });
+
+      // Device orientation (gyroscope) if available
+      if (typeof DeviceOrientationEvent !== 'undefined') {
+        window.addEventListener('deviceorientation', (e) => {
+          if (e.gamma == null) return;
+          tRotY = (e.gamma / 45) * 0.4;   // left/right tilt
+          tRotX = (e.beta  / 90) * 0.25;  // forward/back tilt
+        }, { passive: true });
+      }
+    }
+
+    // ── Pause when tab hidden (saves battery on mobile) ──
+    let paused = false;
+    document.addEventListener('visibilitychange', () => {
+      paused = document.hidden;
     });
+
+    // ── Glitch pulse system ──
+    let glitchTarget = 0;
+    let glitchUntil  = 0;
+
+    function triggerGlitch(strength = 1.0, duration = 320) {
+      glitchTarget = strength;
+      glitchUntil  = performance.now() + duration;
+
+      // Sync CSS glitch on hero headings
+      document.querySelectorAll('.glitch-text').forEach(el => {
+        el.classList.remove('glitching');
+        // Force reflow so animation restarts
+        void el.offsetWidth;
+        el.classList.add('glitching');
+        setTimeout(() => el.classList.remove('glitching'), 600);
+      });
+    }
+    window.__follyGlitch = triggerGlitch;
+
+    // Initial glitch shortly after the scene appears
+    setTimeout(() => triggerGlitch(1.0, 380), 600);
+
+    // Periodic random glitches every 5–9s
+    function scheduleNextGlitch() {
+      const wait = 5000 + Math.random() * 4000;
+      setTimeout(() => {
+        if (!document.hidden) triggerGlitch(0.7 + Math.random() * 0.4, 260);
+        scheduleNextGlitch();
+      }, wait);
+    }
+    scheduleNextGlitch();
 
     // ── Animation loop ──
     const t0 = performance.now();
 
     function animate() {
       requestAnimationFrame(animate);
-      const t = (performance.now() - t0) * 0.001;
+      if (paused) return;
 
-      // Rotate icosahedra independently
+      const now = performance.now();
+      const t   = (now - t0) * 0.001;
+
       icoOuter.rotation.y =  t * 0.20;
       icoOuter.rotation.x =  t * 0.10;
       icoInner.rotation.y = -t * 0.25;
       icoInner.rotation.z =  t * 0.15;
 
-      // Smooth parallax follow
       cRotX += (tRotX - cRotX) * 0.04;
       cRotY += (tRotY - cRotY) * 0.04;
       scene.rotation.x = cRotX;
       scene.rotation.y = cRotY;
 
-      // Drift particles along their orbits
       const pos = pGeo.attributes.position.array;
       for (let i = 0; i < N; i++) {
         const o = orbits[i];
         o.theta += o.dTheta;
         o.phi   += o.dPhi;
-        if (o.phi < 0.08)            { o.phi =  0.08;           o.dPhi *= -1; }
-        if (o.phi > Math.PI - 0.08)  { o.phi = Math.PI - 0.08;  o.dPhi *= -1; }
-
+        if (o.phi < 0.08)           { o.phi = 0.08;            o.dPhi *= -1; }
+        if (o.phi > Math.PI - 0.08) { o.phi = Math.PI - 0.08;  o.dPhi *= -1; }
         pos[i*3]     = o.r * Math.sin(o.phi) * Math.cos(o.theta);
         pos[i*3 + 1] = o.r * Math.sin(o.phi) * Math.sin(o.theta);
         pos[i*3 + 2] = o.r * Math.cos(o.phi);
       }
       pGeo.attributes.position.needsUpdate = true;
 
-      // Update line segment endpoints
       const lb = lGeo.attributes.position.array;
       for (let k = 0; k < connIdx.length; k += 2) {
         const a = connIdx[k], b = connIdx[k + 1];
@@ -733,15 +889,24 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       lGeo.attributes.position.needsUpdate = true;
 
+      // Decay glitch back to idle baseline
+      const idleGlitch = 0.04;
+      if (now > glitchUntil) glitchTarget = idleGlitch;
+      const cur = postMat.uniforms.uGlitch.value;
+      postMat.uniforms.uGlitch.value = cur + (glitchTarget - cur) * 0.25;
+      postMat.uniforms.uTime.value   = t;
+
+      // Two-pass render: scene → renderTarget → post quad → canvas
+      renderer.setRenderTarget(renderTarget);
+      renderer.clear();
       renderer.render(scene, camera);
+      renderer.setRenderTarget(null);
+      renderer.clear();
+      renderer.render(postScene, postCamera);
     }
 
     animate();
-
-    // Fade canvas in once running
     requestAnimationFrame(() => canvas.classList.add('ready'));
-
-    window.addEventListener('resize', syncSize);
   }
 
   // ─── CHAT WIDGET ────────────────────────────────
