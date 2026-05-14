@@ -765,21 +765,28 @@ a.menu-footer-link:hover {
   height: 100% !important;
   z-index: 2;
   opacity: 0;
-  transition: opacity 1s ease;
+  transition: opacity 1.2s ease;
+  cursor: grab;
 }
+
+#hero-canvas:active { cursor: grabbing; }
 
 #hero-canvas.ready {
   opacity: 1;
 }
 
+/* Layered radial + conic ambient glow — backstop for the in-canvas bloom */
 .hero-3d-glow {
   position: absolute;
   inset: -30%;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(80, 99, 131, 0.22) 0%, transparent 65%);
-  animation: glowPulse 4s ease-in-out infinite alternate;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(122, 137, 155, 0.18) 0%, transparent 55%),
+    conic-gradient(from 0deg at 50% 50%, rgba(80, 99, 131, 0.10), rgba(46, 65, 96, 0.04), rgba(80, 99, 131, 0.10));
+  animation: glowPulse 5s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 1;
+  filter: blur(6px);
 }
 
 @keyframes glowPulse {
